@@ -34,7 +34,7 @@ struct APIClient {
         }
     }
     
-    enum Error: LocalizedError {
+    enum Error: LocalizedError, Identifiable {
         var id: String { localizedDescription }
         
         case unreachebleAdress(url: URL)
@@ -101,5 +101,4 @@ struct APIClient {
                 .eraseToAnyPublisher()
         }
     }
-    
 }

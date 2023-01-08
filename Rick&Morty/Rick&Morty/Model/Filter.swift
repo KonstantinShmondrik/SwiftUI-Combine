@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Combine
+
 
 enum Tag: String, CaseIterable, Identifiable {
     case alive
@@ -19,9 +21,9 @@ enum Tag: String, CaseIterable, Identifiable {
     }
 }
 
-public struct Filter {
+final class Filter: ObservableObject {
     
-    var teg: [Tag] = []
+   @Published var tags: [Tag] = []
     
     init() {}
 }

@@ -6,17 +6,20 @@
 //
 
 import Foundation
+import Combine
 
-class CharactersViewModel {
+class CharactersViewModel: ObservableObject {
     
-    private var allCaracters: [Character] = []
-    var error: APIClient.Error? = nil
-    var lustUpdateTime: TimeInterval = Date().timeIntervalSince1970
+    @Published private var allCaracters: [Character] = []
+    @Published var error: APIClient.Error? = nil
+    @Published var lustUpdateTime: TimeInterval = Date().timeIntervalSince1970
+    @Published var filterTags: [Tag] = []
     
     private var apiClient = APIClient()
     private var currentPage: Int = 1
     
-    var filterTags: [Tag] = []
+    var cancellable = Set<AnyCancellable>()
+    
     var characters: [Character] {
         guard !filterTags.isEmpty else {
             return allCaracters
@@ -28,6 +31,23 @@ class CharactersViewModel {
                     self.checkMatching(character: character, for: tag)
                 }
             }
+    }
+    
+    func fetchCharacters() {
+        apiClient
+            .page(num: currentPage + 1)
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                if case .failure(let error) = completion {
+                    self?.error = error
+                }
+            }, receiveValue: { [weak self] page in
+                self?.error = nil
+                self?.allCaracters.append(contentsOf: page.results)
+                self?.currentPage += 1
+                self?.lustUpdateTime = Date().timeIntervalSince1970
+            })
+            .store(in: &cancellable)
     }
     
     private func checkMatching(character: Character, for tag: Tag) -> Bool {
